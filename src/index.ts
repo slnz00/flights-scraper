@@ -1,7 +1,7 @@
-import { google, sheets_v4 } from 'googleapis';
+import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
 import { RequestInit } from 'node-fetch';
-import * as fs from 'node:fs/promises';
+import * as fs from 'node:fs';
 import { CityInfo, DeepPartial, FlightResult, SkyScannerFlights, SkyScannerSuggestions, Trip, TripResult } from './types';
 import dotenv from 'dotenv'
 
@@ -9,24 +9,7 @@ dotenv.config()
 
 const SHEET_NAME = 'Repjegyek_Scraped'
 
-const trip: Trip = {
-  depart: {
-    origins: ['Budapest', 'Berlin', 'London'],
-    destinations: ['Amsterdam'],
-    dates: [
-      '2025-08-11',
-      '2025-08-12',
-    ]
-  },
-  return: {
-    origins: ['Amsterdam'],
-    destinations: ['Budapest'],
-    dates: [
-      '2025-10-16',
-      '2025-10-17',
-    ]
-  }
-}
+const trip: Trip = JSON.parse(fs.readFileSync('config.json', 'utf-8'))
 
 const cache = {
   cityInfo: {} as Partial<Record<string, CityInfo>>
@@ -342,31 +325,48 @@ const writeToSpreadSheet = async (result: TripResult) => {
   });
 }
 
-async function useFileCache<T>(name: string, fetchData: () => Promise<T>): Promise<T> {
-  const filePath = `cache-${name}.json`;
+function useFileCache<T>(name: string, fetchData: () => Promise<T>) {
+  let disabled = false;
 
-  try {
-    const data = await fs.readFile(filePath, 'utf-8');
+  const cachePromise = Promise.resolve().then(async () => {
+    const filePath = `cache-${name}.json`;
 
-    if (!data.trim()) {
-      throw new Error('Cache is empty');
+    if (disabled) {
+      return fetchData()
     }
 
-    return JSON.parse(data);
-  } catch (err) {
-    const result = await fetchData()
+    try {
+      const data = await fs.promises.readFile(filePath, 'utf-8');
 
-    await fs.writeFile(`cache-${name}.json`, JSON.stringify(result, null, 2), 'utf-8');
+      if (!data.trim()) {
+        throw new Error('Cache is empty');
+      }
 
-    return result
+      return JSON.parse(data);
+    } catch (err) {
+      const result = await fetchData()
+      const resultJson = JSON.stringify(result, null, 2);
+
+      await fs.promises.writeFile(`cache-${name}.json`, resultJson, 'utf-8');
+
+      return result
+    }
+  }) as Promise<T> & { disableCache: () => Promise<T> };
+
+  cachePromise.disableCache = () => {
+    disabled = true
+
+    return cachePromise
   }
+
+  return cachePromise
 }
 
 async function main() {
   const result: TripResult = await useFileCache('results', async () => ({
     depart: await getFlightResults('depart'),
     return: await getFlightResults('return')
-  }))
+  })).disableCache()
 
   await writeToSpreadSheet(result)
 }
