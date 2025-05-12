@@ -1,0 +1,22 @@
+{
+  "name": "flight-scraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "debug": "tsx --inspect-brk src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "tsx": "^4.19.4",
+    "google-auth-library": "^9.15.1",
+    "googleapis": "^148.0.0",
+    "@types/node": "^22.15.17",
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.5.3",
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": {},
+  "private": true
+}
