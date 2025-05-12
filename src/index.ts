@@ -12,18 +12,18 @@ const SHEET_NAME = 'Repjegyek_Scraped'
 const trip: Trip = {
   depart: {
     origins: ['Budapest', 'Berlin', 'London'],
-    destinations: ['Corfu'],
+    destinations: ['Amsterdam'],
     dates: [
-      '2025-09-11',
-      '2025-09-12',
+      '2025-08-11',
+      '2025-08-12',
     ]
   },
   return: {
-    origins: ['Corfu'],
-    destinations: ['Budapest', 'Berlin', 'London'],
+    origins: ['Amsterdam'],
+    destinations: ['Budapest'],
     dates: [
-      '2025-09-16',
-      '2025-09-17',
+      '2025-10-16',
+      '2025-10-17',
     ]
   }
 }
@@ -155,7 +155,7 @@ async function getFlights (opt: {
     })
   })
 
-  return results;
+  return results.sort((a, b) => new Date(a.departsAt).getTime() - new Date(b.departsAt).getTime());
 }
 
 const getFlightResults = async (type: 'depart' | 'return'): Promise<FlightResult[]> => {
