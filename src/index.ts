@@ -7,7 +7,7 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-const SHEET_NAME = 'Repjegyek'
+const SHEET_NAME = 'Repjegyek_Scraped'
 
 const trip: Trip = {
   depart: {
